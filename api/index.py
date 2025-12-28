@@ -13,11 +13,17 @@ def analizar():
         a = float(data.get('a_rating', 0))
         
         if sport == 'soccer':
-            # Fórmula Fútbol: Divisor 140
+            # Fórmula Fútbol: (ELO + 100 - ELO) / 140
             expected_margin = (h + 100 - a) / 140
         elif sport == 'nba':
-            # Fórmula NBA: Divisor 28 (Basado en ratings de puntos)
-            expected_margin = (h + 100 - a) / 28
+            # Lógica Inteligente para NBA:
+            if h > 1000: 
+                # Si es ELO (ej: 1600), usamos el divisor
+                expected_margin = (h + 100 - a) / 28
+            else:
+                # Si es Dunkel (ej: 111), la diferencia ya son los puntos
+                # Añadimos +3 por ventaja de localía estándar en NBA
+                expected_margin = (h - a) + 3
         else:
             expected_margin = 0
 
