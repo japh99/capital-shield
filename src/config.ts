@@ -1,12 +1,10 @@
 export const CONFIG = {
-  // Configuración de The Odds API
-  ODDS_API_KEY:  // Aquí pondrás tus llaves
+  // Ahora usamos variables de entorno de Vite
+  ODDS_API_KEY: import.meta.env.VITE_ODDS_API_KEY || '', 
   ODDS_BASE_URL: 'https://api.the-odds-api.com/v4/sports',
   
-  // Endpoint de tu Backend en Vercel
   API_BACKEND: '/api/analizar_manual',
 
-  // Listado de Ligas Soportadas
   LEAGUES: {
     SOCCER: [
       { id: 'soccer_usa_mls', name: 'MLS (USA)' },
