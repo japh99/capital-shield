@@ -1,14 +1,20 @@
-// Capital Shield - Engine de Rotación de APIs corregido
+// Capital Shield - Configuración con Limpieza Automática de Keys
 const getApiKey = () => {
-  // Ajustado al nombre exacto de tu captura en Vercel
   const pool = import.meta.env.VITE_ODDS_KEYS;
   
-  if (!pool) return '';
+  if (!pool) {
+    console.error("Variable VITE_ODDS_KEYS no encontrada");
+    return '';
+  }
   
-  // Limpiamos posibles espacios o caracteres extraños
-  const keys = pool.replace(/[\[\]"]/g, '').split(',');
+  // LIMPIEZA: Eliminamos corchetes, comillas y espacios en blanco que se filtran en iPad
+  const cleanPool = pool.replace(/[\[\]"'\s]/g, '');
+  
+  const keys = cleanPool.split(',');
   const randomIndex = Math.floor(Math.random() * keys.length);
-  return keys[randomIndex].trim();
+  const selectedKey = keys[randomIndex].trim();
+  
+  return selectedKey;
 };
 
 export const CONFIG = {
@@ -19,6 +25,7 @@ export const CONFIG = {
     SOCCER: [
         { id: 'soccer_uefa_champs_league', name: 'Champions League' },
         { id: 'soccer_spain_la_liga', name: 'España - La Liga' },
+        { id: 'soccer_spain_segunda_division', name: 'España - Segunda' },
         { id: 'soccer_england_epl', name: 'Inglaterra - Premier League' },
         { id: 'soccer_spain_copa_del_rey', name: 'España - Copa del Rey' },
         { id: 'soccer_england_efl_cup', name: 'Inglaterra - Carabao Cup' },
@@ -27,8 +34,7 @@ export const CONFIG = {
         { id: 'soccer_mexico_ligamx', name: 'México - Liga MX' },
         { id: 'soccer_brazil_campeonato', name: 'Brasil - Serie A' },
         { id: 'soccer_argentina_primera_division', name: 'Argentina - Primera' },
-        { id: 'soccer_usa_mls', name: 'USA - MLS' },
-        { id: 'soccer_fifa_world_cup', name: 'FIFA World Cup' }
+        { id: 'soccer_usa_mls', name: 'USA - MLS' }
     ],
     NBA: [{ id: 'basketball_nba', name: 'NBA' }],
     MLB: [{ id: 'baseball_mlb', name: 'MLB' }]
