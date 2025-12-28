@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Trophy, Dribbble, CircleDot, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Shield, Trophy, Activity, Zap, LayoutDashboard, Menu, X } from 'lucide-react';
 import SoccerModule from './modules/Soccer';
 import NbaModule from './modules/Nba';
 import MlbModule from './modules/Mlb';
@@ -9,44 +9,32 @@ function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const menuItems = [
-    { id: 'soccer', name: 'Fútbol (ELO)', icon: Trophy, color: 'text-emerald-500' },
-    { id: 'nba', name: 'NBA (Rating)', icon: Dribbble, color: 'text-orange-500' },
-    { id: 'mlb', name: 'MLB (Run Line)', icon: CircleDot, color: 'text-blue-500' },
+    { id: 'soccer', name: 'Fútbol', icon: Trophy, color: 'text-emerald-500' },
+    { id: 'nba', name: 'NBA', icon: Activity, color: 'text-orange-500' },
+    { id: 'mlb', name: 'MLB', icon: Zap, color: 'text-blue-500' },
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#050505] text-gray-100">
-      <nav className={`${isSidebarOpen ? 'w-64' : 'w-20'} border-r border-white/5 bg-black/20 transition-all duration-300 flex flex-col`}>
-        <div className="p-6 flex items-center gap-3">
-          <Shield className="text-emerald-500" size={32} />
-          {isSidebarOpen && <h1 className="font-black tracking-tighter text-xl text-white">CAPITAL<span className="text-emerald-500">SHIELD</span></h1>}
+    <div className="min-h-screen flex bg-[#050505] text-white">
+      <nav className={`${isSidebarOpen ? 'w-64' : 'w-20'} border-r border-white/10 bg-black flex flex-col transition-all`}>
+        <div className="p-6 flex items-center gap-2">
+          <Shield className="text-emerald-500" />
+          {isSidebarOpen && <span className="font-bold">CAPITAL SHIELD</span>}
         </div>
-        <div className="flex-1 px-4 space-y-2 mt-4">
+        <div className="flex-1 px-4 space-y-2">
           {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-4 p-3 rounded-lg transition-all ${activeTab === item.id ? 'bg-white/10 text-white' : 'text-gray-500 hover:bg-white/5'}`}
-            >
-              <item.icon className={activeTab === item.id ? item.color : ''} size={20} />
-              {isSidebarOpen && <span className="font-medium text-sm">{item.name}</span>}
+            <button key={item.id} onClick={() => setActiveTab(item.id)} className="w-full flex items-center gap-4 p-3 hover:bg-white/5 rounded-lg">
+              <item.icon className={item.color} size={20} />
+              {isSidebarOpen && <span className="text-sm">{item.name}</span>}
             </button>
           ))}
         </div>
-        <div className="p-4 border-t border-white/5">
-          <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="w-full flex justify-center p-2 hover:bg-white/5 rounded-lg">
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
       </nav>
-      <main className="flex-1 overflow-y-auto">
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/10">
-          <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
-            <LayoutDashboard size={14} />
-            <span>TERMINAL / {activeTab.toUpperCase()}</span>
-          </div>
+      <main className="flex-1">
+        <header className="h-16 border-b border-white/10 flex items-center px-8 text-xs text-gray-500 uppercase tracking-widest">
+          Terminal / {activeTab}
         </header>
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-8">
           {activeTab === 'soccer' && <SoccerModule />}
           {activeTab === 'nba' && <NbaModule />}
           {activeTab === 'mlb' && <MlbModule />}
@@ -55,5 +43,4 @@ function App() {
     </div>
   );
 }
-
 export default App;
