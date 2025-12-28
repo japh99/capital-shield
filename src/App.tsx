@@ -16,24 +16,29 @@ function App() {
 
   return (
     <div className="min-h-screen flex bg-[#050505] text-white">
-      <nav className={`${isSidebarOpen ? 'w-64' : 'w-20'} border-r border-white/10 flex flex-col`}>
+      <nav className={`${isSidebarOpen ? 'w-64' : 'w-20'} border-r border-white/10 bg-black flex flex-col transition-all`}>
         <div className="p-6 flex items-center gap-2">
-          <Shield className="text-emerald-500" />
-          {isSidebarOpen && <span className="font-bold">CAPITAL SHIELD</span>}
+          <Shield className="text-emerald-500" size={32} />
+          {isSidebarOpen && <span className="font-black tracking-tighter text-xl">CAPITAL SHIELD</span>}
         </div>
-        <div className="flex-1 px-4 mt-4">
+        <div className="flex-1 px-4 mt-4 space-y-2">
           {menuItems.map((item) => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)} className="w-full flex items-center gap-4 p-3 hover:bg-white/5 rounded-lg">
+            <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-white/10' : 'hover:bg-white/5'}`}>
               <item.icon className={item.color} size={20} />
-              {isSidebarOpen && <span>{item.name}</span>}
+              {isSidebarOpen && <span className="text-sm font-medium">{item.name}</span>}
             </button>
           ))}
         </div>
       </nav>
-      <main className="flex-1 p-8">
-        {activeTab === 'soccer' && <SoccerModule />}
-        {activeTab === 'nba' && <NbaModule />}
-        {activeTab === 'mlb' && <MlbModule />}
+      <main className="flex-1">
+        <header className="h-16 border-b border-white/10 flex items-center px-8 text-[10px] text-gray-500 uppercase tracking-[0.2em]">
+          Terminal / {activeTab}
+        </header>
+        <div className="p-8">
+          {activeTab === 'soccer' && <SoccerModule />}
+          {activeTab === 'nba' && <NbaModule />}
+          {activeTab === 'mlb' && <MlbModule />}
+        </div>
       </main>
     </div>
   );
