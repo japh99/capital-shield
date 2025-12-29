@@ -97,91 +97,179 @@ Basado en que la línea con mayor valor matemático es **${bestLine.team.toUpper
     alert("¡SÚPER PROMPT MAESTRO ACTUALIZADO!");
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
-      {/* SECCIÓN 1: MERCADO */}
-      <div className="glass-card p-6 border-white/5">
-        <h3 className="text-[10px] font-bold text-emerald-500 uppercase mb-4 tracking-widest flex items-center gap-2"><Search size={14}/> 1. Mercado</h3>
-        <select value={selectedLeague} onChange={(e) => setSelectedLeague(e.target.value)} className="w-full bg-black border border-white/10 p-3 rounded-xl text-xs text-white mb-4 outline-none focus:border-emerald-500">
-          <option value="">Seleccionar Competición...</option>
-          {CONFIG.LEAGUES.SOCCER.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-        </select>
-        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full bg-black border border-white/10 p-3 rounded-xl text-xs text-white mb-6 scheme-dark" />
-        <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-          {loading ? <p className="text-center py-10 text-[10px] animate-pulse">Sincronizando...</p> : 
-            matches.map(m => (
-              <button key={m.id} onClick={() => setSelectedMatch(m)} className={`w-full text-left p-4 rounded-xl border transition-all ${selectedMatch?.id === m.id ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
-                <div className="font-black text-[10px] text-white uppercase">{m.home_team} vs {m.away_team}</div>
-              </button>
-            ))
-          }
+  // Solo las partes clave del cambio visual para no repetir todo el código previo
+// Mantener toda la lógica previa de ELO y Prompts que ya funciona.
+
+return (
+    <div className="space-y-6">
+      {/* HEADER DINÁMICO */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+        <div>
+          <h2 className="text-4xl font-black tracking-tighter text-white uppercase italic">Soccer <span className="text-emerald-500 not-italic">Terminal</span></h2>
+          <div className="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">
+             <Globe2 size={12} />
+             <span>Data Stream: The Odds API + ClubElo</span>
+          </div>
         </div>
       </div>
 
-      {/* SECCIÓN 2: DATOS */}
-      <div className="glass-card p-6 border-t-4 border-emerald-600 bg-gradient-to-b from-emerald-600/5 to-transparent">
-        <h3 className="text-[10px] font-bold text-emerald-500 uppercase mb-4 tracking-widest text-center">2. Inteligencia</h3>
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <input type="number" placeholder="ELO Local" className="bg-black border border-white/10 p-4 rounded-xl text-xs text-white" onChange={e => setEloH(e.target.value)} />
-          <input type="number" placeholder="ELO Visita" className="bg-black border border-white/10 p-4 rounded-xl text-xs text-white" onChange={e => setEloA(e.target.value)} />
-        </div>
-        <textarea placeholder="Notas pro (Tiros, H2H, Lesiones...)" className="w-full bg-white/5 p-4 rounded-xl text-[11px] mb-4 border border-white/5 h-24 outline-none focus:border-emerald-500/50" onChange={e => setAnalystNotes(e.target.value)} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <div className="border-t border-white/5 pt-4">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[9px] uppercase font-bold text-gray-400">Líneas de Mercado</span>
-            <button onClick={() => setHandicaps([...handicaps, { team: 'home', line: '', odds: '' }])} className="text-emerald-500 hover:scale-110"><Plus size={18}/></button>
-          </div>
-          {handicaps.map((h, i) => (
-            <div key={i} className="bg-white/5 p-3 rounded-xl mb-2 border border-white/5 animate-in slide-in-from-right-2">
-              <select value={h.team} onChange={(e) => { const n = [...handicaps]; n[i].team = e.target.value; setHandicaps(n); }} className="w-full bg-transparent text-[10px] text-emerald-500 font-bold mb-2 outline-none">
-                <option value="home">Hándicap LOCAL</option>
-                <option value="away">Hándicap VISITANTE</option>
-              </select>
-              <div className="flex gap-2">
-                <input placeholder="Línea" className="flex-1 bg-black border border-white/10 p-2 rounded text-xs text-white font-mono" onChange={(e) => { const n = [...handicaps]; n[i].line = e.target.value; setHandicaps(n); }} />
-                <input placeholder="Cuota" className="w-16 bg-black border border-white/10 p-2 rounded text-xs text-white font-mono" onChange={(e) => { const n = [...handicaps]; n[i].odds = e.target.value; setHandicaps(n); }} />
-                <button onClick={() => setHandicaps(handicaps.filter((_, idx) => idx !== i))} className="text-red-900"><Trash2 size={16}/></button>
-              </div>
-            </div>
-          ))}
-          <button onClick={runFullAnalysis} disabled={isAnalyzing} className="w-full bg-emerald-600 p-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] mt-4 shadow-lg hover:bg-emerald-500 transition-all">
-            {isAnalyzing ? 'PROCESANDO...' : 'EJECUTAR ANÁLISIS'}
-          </button>
-        </div>
-      </div>
+        {/* PANEL DE SELECCIÓN - OCUPA 4/12 */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="glass-titanium rounded-3xl p-6">
+             <label className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.2em] mb-4 block">1. Fuente de Datos</label>
+             <select 
+               value={selectedLeague}
+               onChange={(e) => setSelectedLeague(e.target.value)}
+               className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm mb-4 outline-none focus:ring-2 ring-emerald-500/20 transition-all cursor-pointer"
+             >
+               <option value="">Seleccionar Competición...</option>
+               {CONFIG.LEAGUES.SOCCER.map(l => <option key={l.id} value={l.id} className="bg-neutral-900">{l.name}</option>)}
+             </select>
+             
+             <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <input 
+                  type="date" 
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-2xl text-sm text-white scheme-dark outline-none focus:ring-2 ring-emerald-500/20"
+                />
+             </div>
 
-      {/* SECCIÓN 3: RESULTADOS */}
-      <div className="space-y-4">
-        {results.length > 0 ? (
-          <div className="animate-in zoom-in-95 space-y-4">
-            <div className="glass-card p-6 border-l-4 border-emerald-500 bg-emerald-500/5">
-              <h3 className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-4">Matriz de Valoración</h3>
-              {results.map((r, i) => (
-                <div key={i} className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5 mb-2">
-                  <div>
-                    <div className={`text-[10px] font-bold uppercase ${r.edge > 0.5 ? 'text-emerald-500' : 'text-gray-500'}`}>
-                      {r.team} [{r.line}]
-                    </div>
-                    <div className="text-[9px] text-gray-600 uppercase mt-1">Cuota: {r.odds}</div>
+             <div className="mt-6 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {loading ? (
+                  <div className="flex flex-col items-center py-12 gap-3">
+                    <RefreshCw className="animate-spin text-emerald-500" />
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Sincronizando mercados...</span>
                   </div>
-                  <div className={`text-3xl font-black ${r.edge > 0.5 ? 'text-emerald-400' : 'text-white'}`}>{r.edge}</div>
+                ) : matches.map(m => (
+                  <button 
+                    key={m.id} 
+                    onClick={() => setSelectedMatch(m)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border ${selectedMatch?.id === m.id ? 'bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : 'bg-white/5 border-transparent hover:bg-white/10'}`}
+                  >
+                    <div className="font-black text-xs text-white uppercase mb-1">{m.home_team} vs {m.away_team}</div>
+                    <div className="text-[9px] text-gray-500 font-mono tracking-tighter">ID: {m.id.substring(0,8)}</div>
+                  </button>
+                ))}
+             </div>
+          </div>
+        </div>
+
+        {/* PANEL DE ANÁLISIS - OCUPA 4/12 */}
+        <div className="lg:col-span-4">
+           <div className="glass-titanium rounded-3xl p-6 border-t-emerald-500/50 border-t-2 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5 text-emerald-500">
+                <Target size={80} />
+              </div>
+              
+              <h3 className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.2em] mb-6 flex items-center gap-2">
+                 <Cpu size={14} /> 2. Configuración Core
+              </h3>
+
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                 <div className="space-y-1">
+                   <span className="text-[9px] text-gray-500 ml-2 uppercase font-bold">Home ELO</span>
+                   <input type="number" placeholder="0.00" className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-lg font-black text-center outline-none focus:border-emerald-500" onChange={e => setEloH(e.target.value)} />
+                 </div>
+                 <div className="space-y-1">
+                   <span className="text-[9px] text-gray-500 ml-2 uppercase font-bold">Away ELO</span>
+                   <input type="number" placeholder="0.00" className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-lg font-black text-center outline-none focus:border-emerald-500" onChange={e => setEloA(e.target.value)} />
+                 </div>
+              </div>
+
+              <textarea 
+                placeholder="Observaciones de campo (Lesiones, clima, tactica...)" 
+                className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-xs text-white outline-none focus:border-emerald-500/50 min-h-[80px] mb-6 resize-none"
+                onChange={e => setAnalystNotes(e.target.value)}
+              />
+
+              <div className="space-y-3 mb-6">
+                {handicaps.map((h, i) => (
+                  <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-3 relative group animate-reveal">
+                    <div className="flex justify-between items-center">
+                      <select 
+                        className="bg-transparent text-[10px] font-black text-emerald-500 uppercase outline-none"
+                        onChange={(e) => { const n = [...handicaps]; n[i].team = e.target.value; setHandicaps(n); }}
+                      >
+                        <option value="home">Hándicap Local</option>
+                        <option value="away">Hándicap Visita</option>
+                      </select>
+                      <button onClick={() => setHandicaps(handicaps.filter((_, idx) => idx !== i))} className="text-red-500/50 hover:text-red-500 transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input placeholder="Línea" className="flex-1 bg-black/40 border border-white/10 p-3 rounded-xl text-xs font-bold text-center" onChange={(e) => { const n = [...handicaps]; n[i].line = e.target.value; setHandicaps(n); }} />
+                      <input placeholder="Cuota" className="w-20 bg-black/40 border border-white/10 p-3 rounded-xl text-xs font-bold text-center" onChange={(e) => { const n = [...handicaps]; n[i].odds = e.target.value; setHandicaps(n); }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={() => setHandicaps([...handicaps, { team: 'home', line: '', odds: '' }])} className="w-full py-4 border border-dashed border-white/10 rounded-2xl text-[10px] font-black uppercase text-gray-500 hover:text-white hover:border-white/20 transition-all mb-4">
+                 + Añadir Línea Alternativa
+              </button>
+
+              <button 
+                onClick={runFullAnalysis} 
+                disabled={isAnalyzing} 
+                className="w-full bg-emerald-600 hover:bg-emerald-500 p-6 rounded-2xl font-black text-xs uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(16,185,129,0.2)] transition-all flex items-center justify-center gap-3 active:scale-95"
+              >
+                {isAnalyzing ? <RefreshCw className="animate-spin" /> : <Zap size={18} fill="currentColor" />}
+                {isAnalyzing ? 'Calculando Core' : 'Analizar Inversión'}
+              </button>
+           </div>
+        </div>
+
+        {/* PANEL DE RESULTADOS - OCUPA 4/12 */}
+        <div className="lg:col-span-4 space-y-6">
+           {results.length > 0 ? (
+             <div className="animate-reveal space-y-6">
+                <div className="glass-titanium rounded-3xl p-8 border-l-4 border-emerald-500">
+                  <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-8">Matriz de Valoración Final</h3>
+                  <div className="space-y-6">
+                    {results.map((r, i) => (
+                      <div key={i} className="flex justify-between items-end border-b border-white/5 pb-4 last:border-0 group">
+                        <div className="space-y-1">
+                          <div className={`text-[10px] font-black uppercase ${r.edge > 0.5 ? 'text-emerald-500' : 'text-gray-500'}`}>
+                            {r.team} [{r.line}]
+                          </div>
+                          <div className="text-[9px] text-gray-600 font-mono tracking-widest uppercase">Cuota Mercado: {r.odds}</div>
+                        </div>
+                        <div className={`text-4xl font-black italic tracking-tighter ${r.edge > 0.5 ? 'text-white' : 'text-gray-700'}`}>
+                          {r.edge > 0 ? `+${r.edge}` : r.edge}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-            <button onClick={copySuperPrompt} className="w-full bg-blue-600 border border-blue-500/40 p-5 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all">
-              <ClipboardCheck size={18} /> Copiar Prompt Estratégico
-            </button>
-          </div>
-        ) : (
-          <div className="glass-card h-full flex flex-col items-center justify-center p-12 text-center border-dashed border-white/10 opacity-20">
-            <Trophy size={48} className="mb-4 text-gray-600" />
-            <p className="text-[10px] font-bold uppercase tracking-widest">Esperando Parámetros</p>
-          </div>
-        )}
+
+                <button 
+                  onClick={copySuperPrompt} 
+                  className="w-full glass-titanium border-blue-500/30 p-8 rounded-3xl flex flex-col items-center gap-4 hover:border-blue-500/50 transition-all group shadow-2xl"
+                >
+                  <div className="p-4 rounded-2xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
+                    <ClipboardCheck size={32} />
+                  </div>
+                  <div className="text-center">
+                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] block mb-1">Capa de Inteligencia</span>
+                    <span className="text-white text-lg font-bold">Copiar Reporte Estratégico</span>
+                  </div>
+                </button>
+             </div>
+           ) : (
+             <div className="glass-titanium rounded-3xl p-12 flex flex-col items-center justify-center text-center opacity-30 border-dashed min-h-[400px]">
+                <BarChart3 size={64} className="mb-6 text-gray-600" />
+                <p className="text-xs font-bold uppercase tracking-[0.3em] leading-loose text-gray-500">
+                  Esperando entrada de datos<br/>para auditoría táctica
+                </p>
+             </div>
+           )}
+        </div>
+
       </div>
     </div>
-  );
-};
-
-export default SoccerModule;
+);
