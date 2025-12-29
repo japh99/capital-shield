@@ -28,12 +28,12 @@ const NbaModule = () => {
   const [aiResponse, setAiResponse] = useState('');
   
   // Matrices de mercado
-  const [handicaps, setHandicaps] = useState<any[]>([{ team: 'home', line: '-4.5', odds: '1.90' }]);
-  const [ouLines, setOuLines] = useState<any[]>([{ type: 'over', value: '228.5', odds: '1.90' }]);
+  const [handicaps, setHandicaps] = useState<any[]>([{ team: 'home', line: '', odds: '' }]);
+  const [ouLines, setOuLines] = useState<any[]>([{ type: 'over', value: '', odds: '' }]);
   const [resultsH, setResultsH] = useState<any[]>([]);
   const [resultsOU, setResultsOU] = useState<any[]>([]);
 
-  // --- LÓGICA DE TIEMPO Y FILTRO ---
+  // --- LÓGICA DE TIEMPO ---
   const getColombiaTime = (utcDate: string) => {
     return new Date(utcDate).toLocaleTimeString('es-CO', {
       timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: true
@@ -61,7 +61,7 @@ const NbaModule = () => {
       });
       setMatches(resp.data);
     } catch (e) {
-      alert("Error de conexión con Odds API. Verifica tu pool de llaves.");
+      alert("Error de conexión con Odds API. Verifica tu pool de llaves en Vercel.");
     } finally {
       setLoading(false);
     }
@@ -69,6 +69,7 @@ const NbaModule = () => {
 
   useEffect(() => { fetchNbaMatches(); }, []);
 
+  // FILTRO INTELIGENTE: Sincroniza la fecha de la API (UTC) con la realidad de Colombia
   const filteredMatches = matches.filter((m: any) => {
     const matchInCol = new Date(m.commence_time).toLocaleDateString('en-CA', {timeZone: 'America/Bogota'});
     return matchInCol === selectedDate;
@@ -77,34 +78,25 @@ const NbaModule = () => {
   // --- SMART RADAR IA (ESCÁNER DE VALOR) ---
   const runSmartRadar = async () => {
     if (filteredMatches.length === 0) return alert("No hay partidos listados para esta fecha.");
-    
     setIsScanning(true);
     setRadarResults([]);
-    
     try {
       const resp = await axios.post('/api/smart_radar', { 
         matches: filteredMatches, 
         sport: 'NBA' 
       });
       
-      // Verificamos si la API devolvió un error (ej. falta de saldo o key inválida)
-      if (resp.data.error) {
-        alert(`Error de IA: ${resp.data.error}`);
-        return;
-      }
-
-      // Procesamos la respuesta (la IA a veces devuelve string, a veces objeto)
       const data = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
       
-      if (data.priorities && data.priorities.length > 0) {
-        setRadarResults(data.priorities);
+      if (data.error) {
+        alert(`Error de IA: ${data.error}`);
       } else {
-        alert("La IA procesó los datos pero no encontró oportunidades de alto valor para hoy.");
+        setRadarResults(data.priorities || []);
       }
-
     } catch (e: any) {
-      const msg = e.response?.data?.error || e.message;
-      alert(`Fallo técnico en Smart Scan: ${msg}`);
+      // Solución al error [object Object]: Mostramos el mensaje real
+      const errorMsg = e.response?.data?.error || e.message || "Error desconocido";
+      alert(`Fallo en Smart Scan: ${errorMsg}`);
     } finally {
       setIsScanning(false);
     }
@@ -112,10 +104,11 @@ const NbaModule = () => {
 
   // --- ANÁLISIS MATEMÁTICO ---
   const runFullAnalysis = async () => {
-    if (!selectedMatch) return alert("Selecciona un partido de la lista.");
+    if (!selectedMatch) return alert("Selecciona un partido de la cartelera.");
     setIsAnalyzing(true);
     setAiResponse('');
     try {
+      // 1. Análisis de Spreads
       if (ratingH && ratingA) {
         const respH = await axios.post(CONFIG.API_BACKEND, { h_rating: ratingH, a_rating: ratingA, sport: 'nba' });
         const resH = handicaps.filter(h => h.line).map(h => {
@@ -125,6 +118,7 @@ const NbaModule = () => {
         });
         setResultsH(resH);
       }
+      // 2. Análisis de Over/Under
       if (projTotal) {
         const resOU = ouLines.filter(l => l.value).map(l => {
           const val = parseFloat(l.value);
@@ -140,18 +134,33 @@ const NbaModule = () => {
   // --- AUDITORÍA IA INDIVIDUAL ---
   const requestAiAnalysis = async () => {
     setAiLoading(true);
-    const prompt = `Actúa como Senior NBA Trader. Analiza: ${selectedMatch.home_team} vs ${selectedMatch.away_team}. Matemática: Proyección Total ${projTotal || 'N/A'}. Investiga: Lesiones, B2B y Pace. Veredicto: ¿Es inversión de valor?`;
+    const prompt = `
+      Actúa como Senior NBA Analyst. Analiza: ${selectedMatch.home_team} vs ${selectedMatch.away_team}.
+      MATEMÁTICA: Margen esperado ${resultsH[0]?.expected || 'N/A'}, Total proyectado ${projTotal || 'N/A'}.
+      LÍNEAS:
+      ${resultsH.map(r => `* Spread ${r.team} [${r.line}] Edge: ${r.edge}`).join(', ')}
+      ${resultsOU.map(r => `* Total ${r.type} [${r.value}] Edge: ${r.edge}`).join(', ')}
+      NOTAS: ${analystNotes}
+      Investiga: Lesiones, Back-to-Back y Pace. Da un veredicto de inversión.
+    `;
     try {
       const resp = await axios.post('/api/ai_analysis', { prompt });
       setAiResponse(resp.data.analysis);
-    } catch (e) { setAiResponse("Error en auditoría individual."); }
+    } catch (e) { setAiResponse("Error en auditoría IA."); }
     finally { setAiLoading(false); }
   };
 
   return (
     <div className="animate-reveal space-y-8 pb-20">
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-4xl font-black tracking-tighter text-white uppercase italic">NBA <span className="text-orange-500 not-italic font-light">Radar</span></h2>
+        <div>
+          <h2 className="text-4xl font-black tracking-tighter text-white uppercase italic">NBA <span className="text-orange-500 not-italic font-light">Radar</span></h2>
+          <div className="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-2">
+             <Clock size={12} className="text-orange-500/50" />
+             <span>NBA Intelligence Stream (Colombia GMT-5)</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -164,10 +173,10 @@ const NbaModule = () => {
               <button 
                 onClick={runSmartRadar} 
                 disabled={isScanning || filteredMatches.length === 0}
-                className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-black transition-all text-[9px] font-black uppercase flex items-center gap-2 border border-emerald-500/20 active:scale-95 disabled:opacity-30 shadow-lg shadow-emerald-500/10"
+                className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-black transition-all text-[9px] font-black uppercase flex items-center gap-2 border border-emerald-500/20 active:scale-95 disabled:opacity-30"
               >
                 {isScanning ? <RefreshCw className="animate-spin" size={12} /> : <BrainCircuit size={14} />}
-                {isScanning ? 'Analizando...' : 'Smart Scan IA'}
+                {isScanning ? 'Escaneando...' : 'Smart Scan IA'}
               </button>
             </div>
             
@@ -178,9 +187,9 @@ const NbaModule = () => {
               </div>
             </div>
 
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar text-white">
-              {loading ? <p className="text-center py-20 text-[10px] animate-pulse">Sincronizando NBA...</p> : 
-                filteredMatches.map(m => {
+            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar text-white">
+              {loading ? <div className="flex flex-col items-center py-20 gap-3 opacity-50"><RefreshCw className="animate-spin text-orange-500" /><span className="text-[10px] font-bold uppercase">Sincronizando...</span></div> : 
+                filteredMatches.length > 0 ? filteredMatches.map(m => {
                   const priority = radarResults.find(r => r.teams.toLowerCase().includes(m.home_team.toLowerCase()) || r.teams.toLowerCase().includes(m.away_team.toLowerCase()));
                   return (
                     <button key={m.id} onClick={() => setSelectedMatch(m)} className={`w-full text-left p-5 rounded-2xl transition-all border relative overflow-hidden ${selectedMatch?.id === m.id ? 'bg-orange-500/10 border-orange-500/40 shadow-xl' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
@@ -190,7 +199,7 @@ const NbaModule = () => {
                       {priority && <div className="mt-3 text-[9px] text-emerald-400 font-medium italic leading-relaxed border-t border-emerald-500/10 pt-2">{priority.reason}</div>}
                     </button>
                   );
-                })
+                }) : <div className="text-center py-20 opacity-30 uppercase text-[10px] tracking-widest font-bold">No hay juegos scheduleados</div>
               }
             </div>
           </div>
@@ -208,38 +217,40 @@ const NbaModule = () => {
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500/50"><Hash size={14} /></div>
               <input type="number" placeholder="Proyección Puntos Totales" className="w-full bg-white/5 border border-white/10 p-4 pl-10 rounded-2xl text-xs text-white outline-none focus:border-orange-500" onChange={e => setProjTotal(e.target.value)} />
             </div>
-            <textarea placeholder="Notas pro (Lesiones, Pace, B2B...)" className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-xs text-white outline-none h-16 resize-none mb-6" onChange={e => setAnalystNotes(e.target.value)} />
+            <textarea placeholder="Notas: B2B, Lesiones estrellas, Pace..." className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-xs text-white outline-none h-16 resize-none mb-6" onChange={e => setAnalystNotes(e.target.value)} />
             
             <div className="space-y-4">
                <div className="border-t border-white/5 pt-4">
                  <div className="flex justify-between items-center mb-3">
-                   <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Matrices de Inversión</span>
+                   <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Matrices Spreads & Totales</span>
                    <div className="flex gap-2">
-                     <button onClick={() => setHandicaps([...handicaps, { team: 'home', line: '', odds: '' }])} className="p-1 bg-orange-500/10 text-orange-500 rounded-lg hover:bg-orange-500"><Plus size={14}/></button>
-                     <button onClick={() => setOuLines([...ouLines, { type: 'over', value: '', odds: '' }])} className="p-1 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500"><Plus size={14}/></button>
+                     <button onClick={() => setHandicaps([...handicaps, { team: 'home', line: '', odds: '' }])} className="p-1 bg-orange-500/10 text-orange-500 rounded-lg hover:bg-orange-500 transition-all"><Plus size={14}/></button>
+                     <button onClick={() => setOuLines([...ouLines, { type: 'over', value: '', odds: '' }])} className="p-1 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 transition-all"><Plus size={14}/></button>
                    </div>
                  </div>
 
                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {handicaps.map((h, i) => (
-                      <div key={`h-${i}`} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col gap-2">
+                      <div key={`h-${i}`} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col gap-2 animate-reveal">
                         <select onChange={(e) => { const n = [...handicaps]; n[i].team = e.target.value; setHandicaps(n); }} className="bg-transparent text-[10px] text-orange-500 font-bold outline-none uppercase">
                           <option value="home">Spread LOCAL</option><option value="away">Spread VISITANTE</option>
                         </select>
                         <div className="flex gap-2">
                           <input placeholder="Línea" className="flex-1 bg-black/40 border border-white/10 p-2 rounded-lg text-xs text-white text-center font-bold" onChange={(e) => { const n = [...handicaps]; n[i].line = e.target.value; setHandicaps(n); }} />
                           <input placeholder="Cuota" className="w-16 bg-black/40 border border-white/10 p-2 rounded-lg text-xs text-white text-center font-bold" onChange={(e) => { const n = [...handicaps]; n[i].odds = e.target.value; setHandicaps(n); }} />
+                          <button onClick={() => setHandicaps(handicaps.filter((_, idx) => idx !== i))} className="text-red-900 px-2"><Trash2 size={16}/></button>
                         </div>
                       </div>
                     ))}
                     {ouLines.map((l, i) => (
-                      <div key={`ou-${i}`} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col gap-2">
+                      <div key={`ou-${i}`} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col gap-2 animate-reveal">
                         <select onChange={(e) => { const n = [...ouLines]; n[i].type = e.target.value; setOuLines(n); }} className="bg-transparent text-[10px] text-blue-500 font-bold outline-none uppercase">
                           <option value="over">OVER (Altas)</option><option value="under">UNDER (Bajas)</option>
                         </select>
                         <div className="flex gap-2">
                           <input placeholder="Total" className="flex-1 bg-black/40 border border-white/10 p-2 rounded-lg text-xs text-white text-center font-bold" onChange={(e) => { const n = [...ouLines]; n[i].value = e.target.value; setOuLines(n); }} />
                           <input placeholder="Cuota" className="w-16 bg-black/40 border border-white/10 p-2 rounded-lg text-xs text-white text-center font-bold" onChange={(e) => { const n = [...ouLines]; n[i].odds = e.target.value; setOuLines(n); }} />
+                          <button onClick={() => setOuLines(ouLines.filter((_, idx) => idx !== i))} className="text-red-900 px-2"><Trash2 size={16}/></button>
                         </div>
                       </div>
                     ))}
@@ -278,7 +289,7 @@ const NbaModule = () => {
                <div className="glass-titanium rounded-[2rem] p-6 border border-emerald-500/20 bg-emerald-500/5 shadow-2xl">
                  <button onClick={requestAiAnalysis} disabled={aiLoading} className="w-full bg-emerald-600 p-5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500 transition-all active:scale-95 shadow-lg">
                     {aiLoading ? <RefreshCw className="animate-spin" size={16} /> : <BrainCircuit size={18} />}
-                    {aiLoading ? 'Analizando...' : 'Ejecutar Auditoría IA'}
+                    {aiLoading ? 'AI Analizando...' : 'Ejecutar Auditoría IA'}
                  </button>
                  {aiResponse && (
                     <div className="mt-6 text-[11px] text-gray-300 leading-relaxed font-medium bg-black/40 p-5 rounded-2xl border border-white/5 animate-reveal max-h-[400px] overflow-y-auto custom-scrollbar">
