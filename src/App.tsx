@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Trophy, Activity, Zap, ArrowLeft, BarChart3, Globe2, Cpu } from 'lucide-react';
+import { Shield, Trophy, Dribbble, Zap, ArrowLeft, BarChart3, Cpu, Globe2 } from 'lucide-react';
 import SoccerModule from './modules/Soccer';
 import NbaModule from './modules/Nba';
 import MlbModule from './modules/Mlb';
@@ -10,21 +10,21 @@ function App() {
   const SportCard = ({ id, name, icon: Icon, color, desc, stats }: any) => (
     <button 
       onClick={() => setView(id)}
-      className="glass-titanium group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 active:scale-95 flex flex-col items-start text-left"
+      className="glass-titanium group relative overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 hover:scale-[1.02] active:scale-95 flex flex-col items-start text-left w-full"
     >
-      <div className={`absolute top-0 right-0 p-12 -mr-8 -mt-8 opacity-10 group-hover:opacity-20 transition-opacity ${color}`}>
-        <Icon size={120} />
+      <div className={`absolute -top-4 -right-4 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity ${color}`}>
+        <Icon size={180} />
       </div>
       
-      <div className={`p-4 rounded-2xl mb-6 ${color} bg-white/5 group-hover:bg-white/10 transition-colors`}>
-        <Icon size={32} />
+      <div className={`p-4 rounded-2xl mb-6 ${color} bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors`}>
+        <Icon size={28} />
       </div>
       
-      <h3 className="text-3xl font-black tracking-tighter mb-2 group-hover:translate-x-1 transition-transform">{name}</h3>
-      <p className="text-gray-500 text-sm mb-6 leading-relaxed max-w-[200px]">{desc}</p>
+      <h3 className="text-3xl font-black tracking-tighter mb-2 uppercase italic group-hover:translate-x-1 transition-transform">{name}</h3>
+      <p className="text-gray-500 text-sm mb-8 leading-relaxed font-medium">{desc}</p>
       
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-        <BarChart3 size={12} />
+      <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-auto bg-white/5 px-3 py-1 rounded-full border border-white/5">
+        <BarChart3 size={10} />
         <span>{stats}</span>
       </div>
     </button>
@@ -32,22 +32,20 @@ function App() {
 
   if (view !== 'selection') {
     return (
-      <div className="min-h-screen pb-12">
-        <nav className="h-20 glass-titanium sticky top-0 z-50 px-6 flex items-center justify-between border-x-0 border-t-0">
-          <button onClick={() => setView('selection')} className="flex items-center gap-3 text-gray-400 hover:text-white transition-all group">
-            <div className="p-2 rounded-full group-hover:bg-white/5 transition-colors">
-               <ArrowLeft size={20} />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Hub Central</span>
+      <div className="min-h-screen bg-[#050505]">
+        <nav className="h-20 glass-titanium sticky top-0 z-50 px-4 sm:px-8 flex items-center justify-between border-x-0 border-t-0">
+          <button onClick={() => setView('selection')} className="flex items-center gap-2 text-gray-500 hover:text-white transition-all group">
+            <div className="p-2 rounded-full group-hover:bg-white/5"><ArrowLeft size={20} /></div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] hidden sm:block">Hub Central</span>
           </button>
           
           <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
-            <Shield className="text-emerald-500" size={16} />
-            <span className="text-[10px] font-black uppercase tracking-tighter">Capital Shield <span className="text-emerald-500/50">v3.0</span></span>
+            <Shield className="text-emerald-500" size={14} />
+            <span className="text-[10px] font-black uppercase tracking-tighter">Capital Shield <span className="opacity-40">v3.0</span></span>
           </div>
         </nav>
 
-        <div className="max-w-7xl mx-auto px-4 mt-8 animate-reveal">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-reveal">
           {view === 'soccer' && <SoccerModule />}
           {view === 'nba' && <NbaModule />}
           {view === 'mlb' && <MlbModule />}
@@ -58,48 +56,53 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -z-10" />
+      {/* Luz de fondo dinámica */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
 
-      <header className="text-center mb-16 animate-reveal">
-        <div className="inline-flex items-center gap-3 mb-6 bg-white/5 px-6 py-2 rounded-full border border-white/10 shadow-2xl">
-          <Cpu size={14} className="text-emerald-500" />
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">AI Driven Terminal</span>
+      <header className="text-center mb-12 sm:mb-20 animate-reveal w-full max-w-4xl">
+        <div className="inline-flex items-center gap-2 mb-6 bg-white/5 px-5 py-2 rounded-full border border-white/10 shadow-xl">
+          <Cpu size={12} className="text-emerald-500" />
+          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-400">Quantitative Intelligence Terminal</span>
         </div>
-        <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-4 italic">
-          CAPITAL<span className="text-emerald-500 font-normal not-italic">SHIELD</span>
+        
+        <h1 className="responsive-title font-black tracking-tighter mb-4 italic text-white uppercase">
+          CAPITAL<span className="text-emerald-500 not-italic font-light">SHIELD</span>
         </h1>
-        <p className="text-gray-500 tracking-[0.5em] uppercase text-xs sm:text-sm font-light">Intelligence for Strategic Investments</p>
+        
+        <p className="text-gray-500 tracking-[0.3em] uppercase text-[10px] sm:text-xs font-bold px-4">
+          Financial Analytics for Strategic Sports Investments
+        </p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl animate-reveal [animation-delay:200ms]">
         <SportCard 
           id="soccer" 
-          name="SOCCER" 
+          name="Soccer" 
           icon={Trophy} 
           color="text-emerald-500" 
-          desc="Análisis predictivo basado en algoritmos ELO y Power Ratings europeos."
-          stats="42 Ligas Activas"
+          desc="Análisis predictivo basado en algoritmos ELO y Power Ratings."
+          stats="International Leagues"
         />
         <SportCard 
           id="nba" 
           name="NBA" 
-          icon={Activity} 
+          icon={Dribbble} 
           color="text-orange-500" 
-          desc="Modelado de totales Over/Under sincronizado con Dunkel Index."
-          stats="Mercado Totales"
+          desc="Modelado de totales y spreads sincronizado con Dunkel Index."
+          stats="Market Totals"
         />
         <SportCard 
           id="mlb" 
           name="MLB" 
           icon={Zap} 
           color="text-blue-500" 
-          desc="Sabermetría avanzada y análisis de rotación de Pitchers Abridores."
+          desc="Sabermetría avanzada y rotación de Pitchers Abridores."
           stats="Run Line Engine"
         />
       </div>
 
-      <footer className="mt-20 text-[9px] text-gray-600 uppercase tracking-[0.5em] animate-reveal [animation-delay:400ms]">
+      <footer className="mt-20 text-[8px] text-gray-700 uppercase tracking-[0.6em] font-black">
         © 2025 Capital Shield Financial Systems
       </footer>
     </div>
