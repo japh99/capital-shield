@@ -4,48 +4,31 @@
 
 :root {
   --bg-dark: #050505;
-  --accent-emerald: #10b981;
-  --accent-orange: #f97316;
-  --accent-blue: #3b82f6;
 }
 
 body {
   background-color: var(--bg-dark);
   background-image: 
-    radial-gradient(circle at 50% -20%, #10b98115, transparent),
-    radial-gradient(circle at 0% 0%, #3b82f605, transparent);
+    radial-gradient(circle at 50% -20%, #10b98110, transparent),
+    radial-gradient(circle at 0% 100%, #3b82f605, transparent);
   color: #ffffff;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
 }
 
-/* Efecto de Vidrio Premium */
+/* Efecto Vidrio Premium */
 .glass-titanium {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
 }
 
-.glass-titanium:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+/* Título Fluido: Grande en PC, Ajustado en Móvil */
+.responsive-title {
+  font-size: clamp(2.5rem, 10vw, 8rem);
+  line-height: 0.9;
 }
 
-/* Animaciones Personalizadas */
-@keyframes reveal {
-  from { opacity: 0; transform: translateY(20px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.animate-reveal {
-  animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Scrollbar Estilizada */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
+/* Scrollbar para móvil */
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-
-/* Mobile safe area */
-.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
