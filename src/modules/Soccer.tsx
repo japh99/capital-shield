@@ -57,31 +57,42 @@ const SoccerModule = () => {
   // --- ACCIONES API ---
 
   const fetchMatches = async () => {
-    if (!selectedLeague) return;
-    setLoading(true);
-    setMatches([]);
-    try {
-      const resp = await axios.get(`${CONFIG.ODDS_BASE_URL}/${selectedLeague}/odds`, {
-        params: { apiKey: CONFIG.ODDS_API_KEY, regions: 'eu', markets: 'h2h', dateFormat: 'iso' }
-      });
-      setMatches(resp.data || []);
-    } catch (e) { 
-      console.error("Error API", e);
-      alert("Error conectando con The Odds API. Verifica tu API Key.");
+  if (!selectedLeague) return;
+  setLoading(true);
+  setMatches([]);
+  
+  try {
+    // 🔄 Obtener siguiente key con rotación simple
+    const apiKey = CONFIG.getNextKey();
+    
+    const resp = await axios.get(`${CONFIG.ODDS_BASE_URL}/${selectedLeague}/odds`, {
+      params: { 
+        apiKey: apiKey,
+        regions: 'eu', 
+        markets: 'h2h', 
+        dateFormat: 'iso' 
+      }
+    });
+    
+    setMatches(resp.data || []);
+    
+  } catch (e: any) { 
+    console.error("Error API:", e);
+    
+    if (e.response?.status === 429) {
+      alert("⏳ Rate limit. Reintentando con otra key...");
+      // Automáticamente reintenta con la siguiente key
+      setTimeout(() => fetchMatches(), 1000);
+    } else if (e.response?.status === 401) {
+      alert("🔑 API Key inválida. Verifica configuración.");
+    } else {
+      alert("❌ Error conectando con The Odds API.");
     }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchMatches(); }, [selectedLeague]);
-
-  const filteredMatches = matches.filter((m: any) => 
-    new Date(m.commence_time).toLocaleDateString('en-CA', {timeZone: 'America/Bogota'}) === selectedDate
-  );
-
-  const runFullAnalysis = async () => {
-    if (!selectedMatch || !eloH || !eloA) return alert("Selecciona partido e ingresa ELOs.");
-    setIsAnalyzing(true);
-    try {
+  }
+  finally { 
+    setLoading(false); 
+  }
+};
       // Obtener el league_code de la liga seleccionada
       let leagueCode = 'generic';
       CONFIG.LEAGUES.SOCCER.forEach((category: any) => {
