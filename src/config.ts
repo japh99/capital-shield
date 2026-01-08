@@ -2,16 +2,9 @@
 // CAPITAL SHIELD - CONFIGURACIÓN CENTRAL
 // ============================================
 
-export const CONFIG = {
-  // Backend API
-  API_BACKEND: '/api',
-  
-  // The Odds API
-  ODDS_BASE_URL: 'https://api.the-odds-api.com/v4/sports',
-  
-  // ⚠️ IMPORTANTE: Reemplaza 'TU_API_KEY_AQUI' con tu API Key real de The Odds API
-  // Puedes obtenerla en: https://the-odds-api.com/
-  ODDS_API_KEY: '"734f30d0866696cf90d5029ac106cfba",
+// 🔑 POOL DE API KEYS (50 Keys para rotación automática)
+const API_KEYS_POOL = [
+  "734f30d0866696cf90d5029ac106cfba",
   "10fb6d9d7b3240906d0acea646068535",
   "a9ff72549c4910f1fa9659e175a35cc0",
   "25e9d8872877f5110254ff6ef42056c6",
@@ -60,7 +53,83 @@ export const CONFIG = {
   "f3ff0fb5d7a7a683f88b8adec904e7b8",
   "1e0ab1ff51d111c88aebe4723020946a",
   "6f74a75a76f42fabaa815c4461c59980",
-  "86de2f86b0b628024ef6d5546b479c0f"',  // 👈 CAMBIA ESTO
+  "86de2f86b0b628024ef6d5546b479c0f"
+];
+
+// 🔄 SISTEMA DE ROTACIÓN INTELIGENTE
+class KeyRotator {
+  private keys: string[];
+  private currentIndex: number;
+  private usageCount: Map<string, number>;
+  private lastReset: Date;
+
+  constructor(keys: string[]) {
+    this.keys = keys;
+    this.currentIndex = 0;
+    this.usageCount = new Map();
+    this.lastReset = new Date();
+    
+    // Inicializar contadores
+    keys.forEach(key => this.usageCount.set(key, 0));
+  }
+
+  getNextKey(): string {
+    // Reset cada hora (500 llamadas por key por hora)
+    const now = new Date();
+    const hoursPassed = (now.getTime() - this.lastReset.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursPassed >= 1) {
+      this.usageCount.forEach((_, key) => this.usageCount.set(key, 0));
+      this.lastReset = now;
+      this.currentIndex = 0;
+    }
+
+    // Rotar al siguiente key
+    const key = this.keys[this.currentIndex];
+    const usage = this.usageCount.get(key) || 0;
+    
+    // Si este key superó 450 llamadas, pasar al siguiente
+    if (usage >= 450) {
+      this.currentIndex = (this.currentIndex + 1) % this.keys.length;
+      return this.getNextKey(); // Recursión para encontrar key disponible
+    }
+
+    // Incrementar uso y devolver key
+    this.usageCount.set(key, usage + 1);
+    this.currentIndex = (this.currentIndex + 1) % this.keys.length;
+    
+    return key;
+  }
+
+  getStats() {
+    const totalCalls = Array.from(this.usageCount.values()).reduce((a, b) => a + b, 0);
+    const keysAvailable = Array.from(this.usageCount.values()).filter(usage => usage < 450).length;
+    
+    return {
+      totalKeys: this.keys.length,
+      keysAvailable,
+      totalCallsThisHour: totalCalls,
+      currentKeyIndex: this.currentIndex,
+      nextReset: new Date(this.lastReset.getTime() + 60 * 60 * 1000).toLocaleTimeString('es-CO')
+    };
+  }
+}
+
+// Instancia global del rotador
+const keyRotator = new KeyRotator(API_KEYS_POOL);
+
+export const CONFIG = {
+  // Backend API
+  API_BACKEND: '/api',
+  
+  // The Odds API
+  ODDS_BASE_URL: 'https://api.the-odds-api.com/v4/sports',
+  
+  // 🔄 Función para obtener API Key con rotación
+  getApiKey: () => keyRotator.getNextKey(),
+  
+  // 📊 Estadísticas de uso
+  getKeyStats: () => keyRotator.getStats(),
   
   // ============================================
   // LIGAS DE FÚTBOL ORGANIZADAS POR REGIÓN
@@ -79,12 +148,6 @@ export const CONFIG = {
             name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League',
             country: 'England',
             league_code: 'epl'
-          },
-          { 
-            id: 'soccer_fa_cup', 
-            name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 FA Cup',
-            country: 'England',
-            league_code: 'fa_cup'
           },
           { 
             id: 'soccer_england_efl_cup', 
@@ -106,12 +169,6 @@ export const CONFIG = {
             country: 'Spain',
             league_code: 'laliga'
           },
-          { 
-            id: 'soccer_spain_copa_del_rey', 
-            name: '🇪🇸 Copa del Rey',
-            country: 'Spain',
-            league_code: 'copa_del_rey'
-          },
           
           // ITALIA
           { 
@@ -119,12 +176,6 @@ export const CONFIG = {
             name: '🇮🇹 Serie A',
             country: 'Italy',
             league_code: 'seriea'
-          },
-          { 
-            id: 'soccer_italy_coppa_italia', 
-            name: '🇮🇹 Coppa Italia',
-            country: 'Italy',
-            league_code: 'coppa_italia'
           },
           
           // ALEMANIA
@@ -134,12 +185,6 @@ export const CONFIG = {
             country: 'Germany',
             league_code: 'bundesliga'
           },
-          { 
-            id: 'soccer_germany_dfb_pokal', 
-            name: '🇩🇪 DFB-Pokal',
-            country: 'Germany',
-            league_code: 'dfb_pokal'
-          },
           
           // FRANCIA
           { 
@@ -147,12 +192,6 @@ export const CONFIG = {
             name: '🇫🇷 Ligue 1',
             country: 'France',
             league_code: 'ligue1'
-          },
-          { 
-            id: 'soccer_france_coupe_de_france', 
-            name: '🇫🇷 Coupe de France',
-            country: 'France',
-            league_code: 'coupe_de_france'
           },
           
           // PORTUGAL
@@ -162,12 +201,6 @@ export const CONFIG = {
             country: 'Portugal',
             league_code: 'liga_portugal'
           },
-          { 
-            id: 'soccer_portugal_taca_de_portugal', 
-            name: '🇵🇹 Taça de Portugal',
-            country: 'Portugal',
-            league_code: 'taca_de_portugal'
-          },
           
           // PAÍSES BAJOS
           { 
@@ -175,12 +208,6 @@ export const CONFIG = {
             name: '🇳🇱 Eredivisie',
             country: 'Netherlands',
             league_code: 'eredivisie'
-          },
-          { 
-            id: 'soccer_netherlands_knvb_beker', 
-            name: '🇳🇱 KNVB Beker',
-            country: 'Netherlands',
-            league_code: 'knvb_beker'
           },
           
           // BÉLGICA
@@ -204,7 +231,7 @@ export const CONFIG = {
             id: 'soccer_austria_bundesliga', 
             name: '🇦🇹 Bundesliga',
             country: 'Austria',
-            league_code: 'bundesliga'
+            league_code: 'bundesliga_austria'
           },
           
           // SUIZA
@@ -252,13 +279,29 @@ export const CONFIG = {
             id: 'soccer_greece_super_league', 
             name: '🇬🇷 Super League',
             country: 'Greece',
-            league_code: 'super_league'
+            league_code: 'super_league_greece'
+          },
+          
+          // ESCOCIA
+          { 
+            id: 'soccer_spl', 
+            name: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Premiership',
+            country: 'Scotland',
+            league_code: 'premiership'
+          },
+          
+          // IRLANDA
+          { 
+            id: 'soccer_league_of_ireland', 
+            name: '🇮🇪 League of Ireland',
+            country: 'Ireland',
+            league_code: 'league_ireland'
           },
         ]
       },
       
       // ========================================
-      // 🌎 LATINOAMÉRICA - VALOR Y VOLATILIDAD
+      // 🌎 LATINOAMÉRICA
       // ========================================
       {
         category: '🌎 LATINOAMÉRICA - VOLATILIDAD',
@@ -304,7 +347,7 @@ export const CONFIG = {
       },
       
       // ========================================
-      // 🇺🇸 USA & ASIA
+      // 🌏 USA & ASIA
       // ========================================
       {
         category: '🇺🇸 USA & ASIA',
@@ -337,7 +380,7 @@ export const CONFIG = {
             id: 'soccer_china_superleague', 
             name: '🇨🇳 Super League',
             country: 'China',
-            league_code: 'super_league'
+            league_code: 'super_league_china'
           },
         ]
       },
@@ -367,12 +410,6 @@ export const CONFIG = {
             country: 'Europe',
             league_code: 'uefa_ecl'
           },
-          { 
-            id: 'soccer_uefa_nations_league', 
-            name: '🇪🇺 UEFA Nations League',
-            country: 'Europe',
-            league_code: 'nations_league'
-          },
           
           // CONMEBOL
           { 
@@ -388,9 +425,9 @@ export const CONFIG = {
             league_code: 'sudamericana'
           },
           
-          // COPAS MUNDIALES Y QUALIFIERS
+          // COPAS MUNDIALES
           { 
-            id: 'soccer_fifa_world_cup', 
+            id: 'soccer_fifa_world_cup_winner', 
             name: '🌍 FIFA World Cup',
             country: 'International',
             league_code: 'world_cup'
