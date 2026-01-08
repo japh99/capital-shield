@@ -1,8 +1,8 @@
 // ============================================
-// CAPITAL SHIELD - CONFIGURACIÓN CENTRAL
+// CAPITAL SHIELD - CONFIGURACIÓN COMPLETA
 // ============================================
 
-// 🔑 POOL DE 50 API KEYS PARA ROTACIÓN
+// 🔑 POOL DE 50 API KEYS
 const API_KEYS = [
   "734f30d0866696cf90d5029ac106cfba",
   "10fb6d9d7b3240906d0acea646068535",
@@ -56,508 +56,113 @@ const API_KEYS = [
   "86de2f86b0b628024ef6d5546b479c0f"
 ];
 
-// Variable para trackear el índice actual
-let currentKeyIndex = 0;
+// Variable global para índice
+let keyIndex = 0;
 
 export const CONFIG = {
-  // Backend API
   API_BACKEND: '/api',
-  
-  // The Odds API
   ODDS_BASE_URL: 'https://api.the-odds-api.com/v4/sports',
   
-  // Pool de keys
-  API_KEYS: API_KEYS,
-  
-  // Función simple de rotación
-  ODDS_API_KEY: API_KEYS[0], // Default (no se usará, pero por compatibilidad)
-  
-  // Obtener siguiente key con rotación
+  // Función de rotación
   getNextKey: () => {
-    const key = API_KEYS[currentKeyIndex];
-    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+    const key = API_KEYS[keyIndex];
+    keyIndex = (keyIndex + 1) % API_KEYS.length;
     return key;
   },
-  
-  // ============================================
-  // LIGAS DE FÚTBOL CON COPAS INCLUIDAS
-  // ============================================
+
   LEAGUES: {
     SOCCER: [
-      // ========================================
-      // 🇪🇺 EUROPA - MERCADO DE ÉLITE
-      // ========================================
       {
         category: '🇪🇺 EUROPA - ÉLITE',
         leagues: [
-          // INGLATERRA
-          { 
-            id: 'soccer_epl', 
-            name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League',
-            country: 'England',
-            league_code: 'epl'
-          },
-          { 
-            id: 'soccer_fa_cup', 
-            name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 FA Cup',
-            country: 'England',
-            league_code: 'fa_cup'
-          },
-          { 
-            id: 'soccer_england_efl_cup', 
-            name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 EFL Cup (Carabao)',
-            country: 'England',
-            league_code: 'efl_cup'
-          },
-          { 
-            id: 'soccer_efl_champ', 
-            name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship',
-            country: 'England',
-            league_code: 'championship'
-          },
+          { id: 'soccer_epl', name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League', country: 'England', league_code: 'epl' },
+          { id: 'soccer_england_efl_cup', name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 EFL Cup (Carabao)', country: 'England', league_code: 'efl_cup' },
+          { id: 'soccer_efl_champ', name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship', country: 'England', league_code: 'championship' },
           
-          // ESPAÑA
-          { 
-            id: 'soccer_spain_la_liga', 
-            name: '🇪🇸 La Liga',
-            country: 'Spain',
-            league_code: 'laliga'
-          },
-          { 
-            id: 'soccer_spain_copa_del_rey', 
-            name: '🇪🇸 Copa del Rey',
-            country: 'Spain',
-            league_code: 'copa_del_rey'
-          },
-          { 
-            id: 'soccer_spain_super_cup', 
-            name: '🇪🇸 Supercopa de España',
-            country: 'Spain',
-            league_code: 'supercopa'
-          },
+          { id: 'soccer_spain_la_liga', name: '🇪🇸 La Liga', country: 'Spain', league_code: 'laliga' },
+          { id: 'soccer_spain_copa_del_rey', name: '🇪🇸 Copa del Rey', country: 'Spain', league_code: 'copa_del_rey' },
           
-          // ITALIA
-          { 
-            id: 'soccer_italy_serie_a', 
-            name: '🇮🇹 Serie A',
-            country: 'Italy',
-            league_code: 'seriea'
-          },
-          { 
-            id: 'soccer_italy_coppa_italia', 
-            name: '🇮🇹 Coppa Italia',
-            country: 'Italy',
-            league_code: 'coppa_italia'
-          },
-          { 
-            id: 'soccer_italy_supercoppa', 
-            name: '🇮🇹 Supercoppa Italiana',
-            country: 'Italy',
-            league_code: 'supercoppa'
-          },
+          { id: 'soccer_italy_serie_a', name: '🇮🇹 Serie A', country: 'Italy', league_code: 'seriea' },
           
-          // ALEMANIA
-          { 
-            id: 'soccer_germany_bundesliga', 
-            name: '🇩🇪 Bundesliga',
-            country: 'Germany',
-            league_code: 'bundesliga'
-          },
-          { 
-            id: 'soccer_germany_dfb_pokal', 
-            name: '🇩🇪 DFB-Pokal',
-            country: 'Germany',
-            league_code: 'dfb_pokal'
-          },
+          { id: 'soccer_germany_bundesliga', name: '🇩🇪 Bundesliga', country: 'Germany', league_code: 'bundesliga' },
           
-          // FRANCIA
-          { 
-            id: 'soccer_france_ligue_one', 
-            name: '🇫🇷 Ligue 1',
-            country: 'France',
-            league_code: 'ligue1'
-          },
-          { 
-            id: 'soccer_france_coupe_de_france', 
-            name: '🇫🇷 Coupe de France',
-            country: 'France',
-            league_code: 'coupe_de_france'
-          },
-          { 
-            id: 'soccer_france_trophee_des_champions', 
-            name: '🇫🇷 Trophée des Champions',
-            country: 'France',
-            league_code: 'trophee_des_champions'
-          },
+          { id: 'soccer_france_ligue_one', name: '🇫🇷 Ligue 1', country: 'France', league_code: 'ligue1' },
           
-          // PORTUGAL
-          { 
-            id: 'soccer_portugal_primeira_liga', 
-            name: '🇵🇹 Liga Portugal',
-            country: 'Portugal',
-            league_code: 'liga_portugal'
-          },
-          { 
-            id: 'soccer_portugal_taca_de_portugal', 
-            name: '🇵🇹 Taça de Portugal',
-            country: 'Portugal',
-            league_code: 'taca_de_portugal'
-          },
-          { 
-            id: 'soccer_portugal_taca_da_liga', 
-            name: '🇵🇹 Taça da Liga',
-            country: 'Portugal',
-            league_code: 'taca_da_liga'
-          },
+          { id: 'soccer_portugal_primeira_liga', name: '🇵🇹 Liga Portugal', country: 'Portugal', league_code: 'liga_portugal' },
           
-          // PAÍSES BAJOS
-          { 
-            id: 'soccer_netherlands_eredivisie', 
-            name: '🇳🇱 Eredivisie',
-            country: 'Netherlands',
-            league_code: 'eredivisie'
-          },
-          { 
-            id: 'soccer_netherlands_knvb_beker', 
-            name: '🇳🇱 KNVB Beker',
-            country: 'Netherlands',
-            league_code: 'knvb_beker'
-          },
+          { id: 'soccer_netherlands_eredivisie', name: '🇳🇱 Eredivisie', country: 'Netherlands', league_code: 'eredivisie' },
           
-          // BÉLGICA
-          { 
-            id: 'soccer_belgium_first_div', 
-            name: '🇧🇪 Pro League',
-            country: 'Belgium',
-            league_code: 'pro_league'
-          },
-          { 
-            id: 'soccer_belgium_cup', 
-            name: '🇧🇪 Coupe de Belgique',
-            country: 'Belgium',
-            league_code: 'coupe_de_belgique'
-          },
+          { id: 'soccer_belgium_first_div', name: '🇧🇪 Pro League', country: 'Belgium', league_code: 'pro_league' },
           
-          // TURQUÍA
-          { 
-            id: 'soccer_turkey_super_league', 
-            name: '🇹🇷 Süper Lig',
-            country: 'Turkey',
-            league_code: 'super_lig'
-          },
-          { 
-            id: 'soccer_turkey_cup', 
-            name: '🇹🇷 Turkish Cup',
-            country: 'Turkey',
-            league_code: 'turkish_cup'
-          },
+          { id: 'soccer_turkey_super_league', name: '🇹🇷 Süper Lig', country: 'Turkey', league_code: 'super_lig' },
           
-          // OTROS EUROPEOS
-          { 
-            id: 'soccer_austria_bundesliga', 
-            name: '🇦🇹 Bundesliga Austria',
-            country: 'Austria',
-            league_code: 'bundesliga_austria'
-          },
-          { 
-            id: 'soccer_switzerland_superleague', 
-            name: '🇨🇭 Super League',
-            country: 'Switzerland',
-            league_code: 'super_league'
-          },
-          { 
-            id: 'soccer_denmark_superliga', 
-            name: '🇩🇰 Superliga',
-            country: 'Denmark',
-            league_code: 'superliga'
-          },
-          { 
-            id: 'soccer_sweden_allsvenskan', 
-            name: '🇸🇪 Allsvenskan',
-            country: 'Sweden',
-            league_code: 'allsvenskan'
-          },
-          { 
-            id: 'soccer_norway_eliteserien', 
-            name: '🇳🇴 Eliteserien',
-            country: 'Norway',
-            league_code: 'eliteserien'
-          },
-          { 
-            id: 'soccer_poland_ekstraklasa', 
-            name: '🇵🇱 Ekstraklasa',
-            country: 'Poland',
-            league_code: 'ekstraklasa'
-          },
-          { 
-            id: 'soccer_greece_super_league', 
-            name: '🇬🇷 Super League',
-            country: 'Greece',
-            league_code: 'super_league_greece'
-          },
-          { 
-            id: 'soccer_spl', 
-            name: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scottish Premiership',
-            country: 'Scotland',
-            league_code: 'premiership'
-          },
-          { 
-            id: 'soccer_league_of_ireland', 
-            name: '🇮🇪 League of Ireland',
-            country: 'Ireland',
-            league_code: 'league_ireland'
-          },
+          { id: 'soccer_austria_bundesliga', name: '🇦🇹 Bundesliga Austria', country: 'Austria', league_code: 'bundesliga_austria' },
+          
+          { id: 'soccer_switzerland_superleague', name: '🇨🇭 Super League', country: 'Switzerland', league_code: 'super_league' },
+          
+          { id: 'soccer_denmark_superliga', name: '🇩🇰 Superliga', country: 'Denmark', league_code: 'superliga' },
+          
+          { id: 'soccer_sweden_allsvenskan', name: '🇸🇪 Allsvenskan', country: 'Sweden', league_code: 'allsvenskan' },
+          
+          { id: 'soccer_norway_eliteserien', name: '🇳🇴 Eliteserien', country: 'Norway', league_code: 'eliteserien' },
+          
+          { id: 'soccer_poland_ekstraklasa', name: '🇵🇱 Ekstraklasa', country: 'Poland', league_code: 'ekstraklasa' },
+          
+          { id: 'soccer_greece_super_league', name: '🇬🇷 Super League', country: 'Greece', league_code: 'super_league_greece' },
+          
+          { id: 'soccer_spl', name: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scottish Premiership', country: 'Scotland', league_code: 'premiership' },
+          
+          { id: 'soccer_league_of_ireland', name: '🇮🇪 League of Ireland', country: 'Ireland', league_code: 'league_ireland' },
         ]
       },
       
-      // ========================================
-      // 🌎 LATINOAMÉRICA
-      // ========================================
       {
         category: '🌎 LATINOAMÉRICA - VOLATILIDAD',
         leagues: [
-          // BRASIL
-          { 
-            id: 'soccer_brazil_campeonato', 
-            name: '🇧🇷 Brasileirão Série A',
-            country: 'Brazil',
-            league_code: 'brasileirao'
-          },
-          { 
-            id: 'soccer_brazil_serie_b', 
-            name: '🇧🇷 Série B',
-            country: 'Brazil',
-            league_code: 'brasileirao_b'
-          },
-          { 
-            id: 'soccer_brazil_copa_do_brasil', 
-            name: '🇧🇷 Copa do Brasil',
-            country: 'Brazil',
-            league_code: 'copa_do_brasil'
-          },
+          { id: 'soccer_brazil_campeonato', name: '🇧🇷 Brasileirão Série A', country: 'Brazil', league_code: 'brasileirao' },
+          { id: 'soccer_brazil_serie_b', name: '🇧🇷 Série B', country: 'Brazil', league_code: 'brasileirao_b' },
           
-          // ARGENTINA
-          { 
-            id: 'soccer_argentina_primera_division', 
-            name: '🇦🇷 Liga Profesional',
-            country: 'Argentina',
-            league_code: 'liga_profesional'
-          },
-          { 
-            id: 'soccer_argentina_copa', 
-            name: '🇦🇷 Copa Argentina',
-            country: 'Argentina',
-            league_code: 'copa_argentina'
-          },
+          { id: 'soccer_argentina_primera_division', name: '🇦🇷 Liga Profesional', country: 'Argentina', league_code: 'liga_profesional' },
           
-          // MÉXICO
-          { 
-            id: 'soccer_mexico_ligamx', 
-            name: '🇲🇽 Liga MX',
-            country: 'Mexico',
-            league_code: 'liga_mx'
-          },
-          { 
-            id: 'soccer_mexico_copa_mx', 
-            name: '🇲🇽 Copa MX',
-            country: 'Mexico',
-            league_code: 'copa_mx'
-          },
+          { id: 'soccer_mexico_ligamx', name: '🇲🇽 Liga MX', country: 'Mexico', league_code: 'liga_mx' },
           
-          // CHILE
-          { 
-            id: 'soccer_chile_campeonato', 
-            name: '🇨🇱 Primera División',
-            country: 'Chile',
-            league_code: 'primera_division'
-          },
-          { 
-            id: 'soccer_chile_copa', 
-            name: '🇨🇱 Copa Chile',
-            country: 'Chile',
-            league_code: 'copa_chile'
-          },
-          
-          // COLOMBIA
-          { 
-            id: 'soccer_colombia_primera_a', 
-            name: '🇨🇴 Liga BetPlay',
-            country: 'Colombia',
-            league_code: 'primera_a'
-          },
-          { 
-            id: 'soccer_colombia_copa', 
-            name: '🇨🇴 Copa Colombia',
-            country: 'Colombia',
-            league_code: 'copa_colombia'
-          },
-          
-          // ECUADOR
-          { 
-            id: 'soccer_ecuador_ligapro', 
-            name: '🇪🇨 LigaPro',
-            country: 'Ecuador',
-            league_code: 'ligapro'
-          },
-          { 
-            id: 'soccer_ecuador_copa', 
-            name: '🇪🇨 Copa Ecuador',
-            country: 'Ecuador',
-            league_code: 'copa_ecuador'
-          },
-          
-          // PERÚ
-          { 
-            id: 'soccer_peru_liga_1', 
-            name: '🇵🇪 Liga 1',
-            country: 'Peru',
-            league_code: 'liga_1'
-          },
-          { 
-            id: 'soccer_peru_copa', 
-            name: '🇵🇪 Copa Bicentenario',
-            country: 'Peru',
-            league_code: 'copa_bicentenario'
-          },
+          { id: 'soccer_chile_campeonato', name: '🇨🇱 Primera División', country: 'Chile', league_code: 'primera_division' },
         ]
       },
       
-      // ========================================
-      // 🇺🇸 USA & ASIA
-      // ========================================
       {
         category: '🇺🇸 USA & ASIA',
         leagues: [
-          { 
-            id: 'soccer_usa_mls', 
-            name: '🇺🇸 MLS',
-            country: 'USA',
-            league_code: 'mls'
-          },
-          { 
-            id: 'soccer_usa_open_cup', 
-            name: '🇺🇸 U.S. Open Cup',
-            country: 'USA',
-            league_code: 'us_open_cup'
-          },
-          { 
-            id: 'soccer_concacaf_leagues_cup', 
-            name: '🏆 Leagues Cup',
-            country: 'USA/Mexico',
-            league_code: 'leagues_cup'
-          },
-          { 
-            id: 'soccer_japan_j_league', 
-            name: '🇯🇵 J League',
-            country: 'Japan',
-            league_code: 'j_league'
-          },
-          { 
-            id: 'soccer_korea_kleague1', 
-            name: '🇰🇷 K League 1',
-            country: 'Korea',
-            league_code: 'k_league'
-          },
-          { 
-            id: 'soccer_china_superleague', 
-            name: '🇨🇳 Super League',
-            country: 'China',
-            league_code: 'super_league_china'
-          },
+          { id: 'soccer_usa_mls', name: '🇺🇸 MLS', country: 'USA', league_code: 'mls' },
+          
+          { id: 'soccer_concacaf_leagues_cup', name: '🏆 Leagues Cup', country: 'USA/Mexico', league_code: 'leagues_cup' },
+          
+          { id: 'soccer_japan_j_league', name: '🇯🇵 J League', country: 'Japan', league_code: 'j_league' },
+          
+          { id: 'soccer_korea_kleague1', name: '🇰🇷 K League 1', country: 'Korea', league_code: 'k_league' },
+          
+          { id: 'soccer_china_superleague', name: '🇨🇳 Super League', country: 'China', league_code: 'super_league_china' },
         ]
       },
       
-      // ========================================
-      // 🏆 COMPETICIONES INTERNACIONALES
-      // ========================================
       {
         category: '🏆 COMPETICIONES INTERNACIONALES',
         leagues: [
-          // UEFA
-          { 
-            id: 'soccer_uefa_champs_league', 
-            name: '⭐ UEFA Champions League',
-            country: 'Europe',
-            league_code: 'uefa_cl'
-          },
-          { 
-            id: 'soccer_uefa_europa_league', 
-            name: '🟡 UEFA Europa League',
-            country: 'Europe',
-            league_code: 'uefa_el'
-          },
-          { 
-            id: 'soccer_uefa_europa_conference_league', 
-            name: '🟢 UEFA Conference League',
-            country: 'Europe',
-            league_code: 'uefa_ecl'
-          },
-          { 
-            id: 'soccer_uefa_nations_league', 
-            name: '🇪🇺 UEFA Nations League',
-            country: 'Europe',
-            league_code: 'nations_league'
-          },
+          { id: 'soccer_uefa_champs_league', name: '⭐ UEFA Champions League', country: 'Europe', league_code: 'uefa_cl' },
           
-          // CONMEBOL
-          { 
-            id: 'soccer_conmebol_libertadores', 
-            name: '🏆 Copa Libertadores',
-            country: 'South America',
-            league_code: 'libertadores'
-          },
-          { 
-            id: 'soccer_conmebol_sudamericana', 
-            name: '🥈 Copa Sudamericana',
-            country: 'South America',
-            league_code: 'sudamericana'
-          },
-          { 
-            id: 'soccer_copa_america', 
-            name: '🌎 Copa América',
-            country: 'South America',
-            league_code: 'copa_america'
-          },
+          { id: 'soccer_uefa_europa_league', name: '🟡 UEFA Europa League', country: 'Europe', league_code: 'uefa_el' },
           
-          // CONCACAF
-          { 
-            id: 'soccer_concacaf_champions_cup', 
-            name: '⚽ CONCACAF Champions Cup',
-            country: 'North America',
-            league_code: 'concacaf_cl'
-          },
-          { 
-            id: 'soccer_concacaf_gold_cup', 
-            name: '🏅 Gold Cup',
-            country: 'North America',
-            league_code: 'gold_cup'
-          },
+          { id: 'soccer_uefa_europa_conference_league', name: '🟢 UEFA Conference League', country: 'Europe', league_code: 'uefa_ecl' },
           
-          // COPAS MUNDIALES
-          { 
-            id: 'soccer_fifa_world_cup_winner', 
-            name: '🌍 FIFA World Cup',
-            country: 'International',
-            league_code: 'world_cup'
-          },
-          { 
-            id: 'soccer_uefa_european_championship', 
-            name: '🇪🇺 UEFA Euro',
-            country: 'Europe',
-            league_code: 'euro'
-          },
-          { 
-            id: 'soccer_fifa_world_cup_qualifiers_south_america', 
-            name: '🌎 WC Qualifiers CONMEBOL',
-            country: 'South America',
-            league_code: 'wc_qualifiers_sa'
-          },
-          { 
-            id: 'soccer_fifa_world_cup_qualifiers_europe', 
-            name: '🇪🇺 WC Qualifiers UEFA',
-            country: 'Europe',
-            league_code: 'wc_qualifiers_uefa'
-          },
+          { id: 'soccer_conmebol_libertadores', name: '🏆 Copa Libertadores', country: 'South America', league_code: 'libertadores' },
+          
+          { id: 'soccer_conmebol_sudamericana', name: '🥈 Copa Sudamericana', country: 'South America', league_code: 'sudamericana' },
+          
+          { id: 'soccer_fifa_world_cup_winner', name: '🌍 FIFA World Cup', country: 'International', league_code: 'world_cup' },
+          
+          { id: 'soccer_fifa_world_cup_qualifiers_south_america', name: '🌎 WC Qualifiers CONMEBOL', country: 'South America', league_code: 'wc_qualifiers_sa' },
+          
+          { id: 'soccer_fifa_world_cup_qualifiers_europe', name: '🇪🇺 WC Qualifiers UEFA', country: 'Europe', league_code: 'wc_qualifiers_uefa' },
         ]
       }
     ]
