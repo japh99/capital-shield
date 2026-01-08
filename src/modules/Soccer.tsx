@@ -8,7 +8,6 @@ import axios from 'axios';
 import { CONFIG } from '../config';
 
 const SoccerModule = () => {
-  // --- ESTADOS ---
   const [matches, setMatches] = useState<any[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [selectedLeague, setSelectedLeague] = useState('');
@@ -25,8 +24,6 @@ const SoccerModule = () => {
   const [resultsH, setResultsH] = useState<any[]>([]);
   const [resultsOU, setResultsOU] = useState<any[]>([]);
 
-  // --- LÓGICA DE APOYO ---
-  
   const parseLine = (input: string): number => {
     if (!input) return 0;
     let clean = input.toString().replace(/\s+/g, '').replace('+', '');
@@ -54,46 +51,55 @@ const SoccerModule = () => {
     } catch (e) { return "N/A"; }
   };
 
-  // --- ACCIONES API ---
-
   const fetchMatches = async () => {
-  if (!selectedLeague) return;
-  setLoading(true);
-  setMatches([]);
-  
-  try {
-    // 🔄 Obtener siguiente key con rotación simple
-    const apiKey = CONFIG.getNextKey();
+    if (!selectedLeague) return;
+    setLoading(true);
+    setMatches([]);
     
-    const resp = await axios.get(`${CONFIG.ODDS_BASE_URL}/${selectedLeague}/odds`, {
-      params: { 
-        apiKey: apiKey,
-        regions: 'eu', 
-        markets: 'h2h', 
-        dateFormat: 'iso' 
+    try {
+      const apiKey = CONFIG.getNextKey();
+      console.log('🔑 Usando API Key:', apiKey.substring(0, 8) + '...');
+      
+      const resp = await axios.get(`${CONFIG.ODDS_BASE_URL}/${selectedLeague}/odds`, {
+        params: { 
+          apiKey: apiKey,
+          regions: 'eu', 
+          markets: 'h2h', 
+          dateFormat: 'iso' 
+        }
+      });
+      
+      setMatches(resp.data || []);
+      console.log('✅ Partidos cargados:', resp.data?.length || 0);
+      
+    } catch (e: any) { 
+      console.error("❌ Error API:", e);
+      
+      if (e.response?.status === 429) {
+        alert("⏳ Rate limit. Reintentando con siguiente key...");
+        setTimeout(() => fetchMatches(), 2000);
+      } else if (e.response?.status === 401) {
+        alert("🔑 API Key inválida. Rotando a siguiente...");
+        setTimeout(() => fetchMatches(), 1000);
+      } else {
+        alert(`❌ Error: ${e.response?.data?.message || 'Conexión fallida'}`);
       }
-    });
-    
-    setMatches(resp.data || []);
-    
-  } catch (e: any) { 
-    console.error("Error API:", e);
-    
-    if (e.response?.status === 429) {
-      alert("⏳ Rate limit. Reintentando con otra key...");
-      // Automáticamente reintenta con la siguiente key
-      setTimeout(() => fetchMatches(), 1000);
-    } else if (e.response?.status === 401) {
-      alert("🔑 API Key inválida. Verifica configuración.");
-    } else {
-      alert("❌ Error conectando con The Odds API.");
     }
-  }
-  finally { 
-    setLoading(false); 
-  }
-};
-      // Obtener el league_code de la liga seleccionada
+    finally { 
+      setLoading(false); 
+    }
+  };
+
+  useEffect(() => { fetchMatches(); }, [selectedLeague]);
+
+  const filteredMatches = matches.filter((m: any) => 
+    new Date(m.commence_time).toLocaleDateString('en-CA', {timeZone: 'America/Bogota'}) === selectedDate
+  );
+
+  const runFullAnalysis = async () => {
+    if (!selectedMatch || !eloH || !eloA) return alert("Selecciona partido e ingresa ELOs.");
+    setIsAnalyzing(true);
+    try {
       let leagueCode = 'generic';
       CONFIG.LEAGUES.SOCCER.forEach((category: any) => {
         const found = category.leagues.find((l: any) => l.id === selectedLeague);
@@ -106,7 +112,7 @@ const SoccerModule = () => {
         h_rating: eloH, 
         a_rating: eloA, 
         line: 0,
-        league: leagueCode  // Enviar código de liga al backend
+        league: leagueCode
       });
       const expH = respH.data.expected_value;
       
@@ -123,119 +129,91 @@ const SoccerModule = () => {
         })));
       }
     } catch (e) { 
-      console.error("Error en análisis:", e);
-      alert("Error en el cálculo. Verifica que el backend esté funcionando."); 
+      console.error("Error análisis:", e);
+      alert("Error en cálculo. Verifica backend."); 
     }
     finally { setIsAnalyzing(false); }
   };
 
-  // --- GENERADORES DE PROMPTS ---
-
-  // PROMPT 1: RADAR DE SELECCIÓN
   const copyRadarPrompt = () => {
-    if (filteredMatches.length === 0) return alert("No hay partidos en esta fecha para escanear.");
+    if (filteredMatches.length === 0) return alert("No hay partidos en esta fecha.");
     const list = filteredMatches.map(m => `- ${m.home_team} vs ${m.away_team} (Cuotas: ${extractOdds(m)})`).join('\n');
-    const prompt = `Eres un Quant Trader Forense de Fútbol. PROHIBIDO inventar datos.
+    const prompt = `Eres un Quant Trader Forense. PROHIBIDO inventar datos.
 
-**EVENTOS DISPONIBLES HOY:**
+EVENTOS HOY:
 ${list}
 
-**PROTOCOLO DE SELECCIÓN:**
-1. Busca en web REAL: Últimos 5 H2H, lesiones confirmadas HOY, clima actual del estadio.
-2. Identifica 3 partidos donde las cuotas NO reflejen:
-   - Bajas recientes confirmadas (estrella lesionada hace <24h)
-   - Motivación extrema (descenso, clasificación europea)
-   - Condiciones climáticas adversas (lluvia intensa, viento >40km/h)
-   - Rotaciones por competiciones intercontinentales
+PROTOCOLO:
+1. Busca en web REAL: H2H, lesiones HOY, clima actual.
+2. Identifica 3 partidos donde cuotas NO reflejen:
+   - Bajas recientes (<24h)
+   - Motivación extrema
+   - Clima adverso
+   - Rotaciones por copas
 
-**FORMATO OBLIGATORIO:**
-Para cada partido:
-- FUENTE VERIFICABLE (link o medio confiable)
-- INEFICIENCIA DETECTADA (cuota debería ser X pero es Y)
-- EDGE ESTIMADO (%)
+FORMATO:
+- FUENTE verificable
+- INEFICIENCIA detectada
+- EDGE estimado (%)
 
-Si no encuentras datos REALES verificables, responde "INFORMACIÓN INSUFICIENTE".`;
+Sin datos REALES → "INFORMACIÓN INSUFICIENTE"`;
     navigator.clipboard.writeText(prompt);
-    alert("✅ Lista para Radar copiada. Pégala en tu IA para filtrar los mejores partidos.");
+    alert("✅ Radar copiado");
   };
 
-  // PROMPT 2: VEREDICTO MAESTRO
   const copyMasterPrompt = () => {
-    if (!selectedMatch) return alert("Selecciona un partido primero.");
+    if (!selectedMatch) return alert("Selecciona un partido.");
     
-    // Obtener nombre de la competición
-    let competitionName = 'Competición Desconocida';
+    let competitionName = 'Desconocida';
     CONFIG.LEAGUES.SOCCER.forEach((category: any) => {
       const found = category.leagues.find((l: any) => l.id === selectedLeague);
       if (found) competitionName = found.name;
     });
 
-    const prompt = `# 🛡️ AUDITORÍA DE INVERSIÓN CAPITAL SHIELD
+    const prompt = `# 🛡️ AUDITORÍA CAPITAL SHIELD
 ## ${selectedMatch.home_team} vs ${selectedMatch.away_team}
 **Competición:** ${competitionName}
-**Hora (Colombia):** ${getColombiaTime(selectedMatch.commence_time)}
+**Hora:** ${getColombiaTime(selectedMatch.commence_time)}
 
----
+📊 MERCADO: ${extractOdds(selectedMatch)}
+🔢 MATEMÁTICA: Margen ${resultsH[0]?.expected || 'N/A'} goles, Total ${projTotal || 'N/A'}
 
-### 📊 DATOS DE MERCADO
-**Cuotas API:** ${extractOdds(selectedMatch)}
+HÁNDICAPS:
+${resultsH.map(r => `- ${r.team} ${r.line} @ ${r.odds || 'N/A'} → Edge: ${r.edge > 0 ? '+' : ''}${r.edge.toFixed(2)}`).join('\n') || 'Sin datos'}
 
-### 🔢 ANÁLISIS CUANTITATIVO
-**Matemática ELO:** Margen proyectado ${resultsH[0]?.expected || 'N/A'} goles.
-**Total Proyectado:** ${projTotal || 'No especificado'} goles.
+TOTALES:
+${resultsOU.map(r => `- ${r.type} ${r.value} @ ${r.odds || 'N/A'} → Edge: ${r.edge > 0 ? '+' : ''}${r.edge.toFixed(2)}`).join('\n') || 'Sin datos'}
 
-**Matriz Hándicaps:**
-${resultsH.map(r => `- ${r.team.toUpperCase()} ${r.line} @ ${r.odds || 'N/A'} → Edge: ${r.edge > 0 ? '+' : ''}${r.edge.toFixed(2)} goles`).join('\n') || 'Sin datos'}
+NOTAS: ${analystNotes || 'Ninguna'}
 
-**Matriz Totales:**
-${resultsOU.map(r => `- ${r.type.toUpperCase()} ${r.value} @ ${r.odds || 'N/A'} → Edge: ${r.edge > 0 ? '+' : ''}${r.edge.toFixed(2)} goles`).join('\n') || 'Sin datos'}
+🎯 MISIÓN IA:
+□ Lesiones/suspensiones última hora
+□ Partido reciente <72h
+□ Rotaciones por copas
+□ Clima vs pronóstico
+□ Motivación extra
+□ Movimiento cuotas >5% últimas 4h
+□ H2H últimos 5 partidos
 
-### 📝 NOTAS DEL ANALISTA
-${analystNotes || 'Ninguna observación adicional'}
-
----
-
-### 🎯 MISIÓN PARA IA (INVESTIGACIÓN PROFUNDA)
-Investiga en fuentes REALES y verificables:
-
-**CHECKLIST DE VALIDACIÓN (Responde CADA punto con fuente):**
-□ ¿Hay lesiones/suspensiones de última hora no reflejadas en cuotas?
-□ ¿Algún equipo jugó hace <72h un partido de alta intensidad?
-□ ¿Rotaciones confirmadas por competiciones internacionales esta semana?
-□ ¿El clima actual difiere del pronóstico original? (lluvia, viento, calor extremo)
-□ ¿Hay motivación extra? (Derby, venganza, descenso, clasificación)
-□ ¿Las cuotas se movieron >5% en las últimas 4 horas? ¿Por qué?
-□ ¿Historial H2H reciente favorece claramente a uno? (últimos 5 partidos)
-
-### 🔍 ANÁLISIS TÁCTICO REQUERIDO
-- **Starting XI confirmado** (ambos equipos)
-- **Sistema táctico probable** (4-3-3, 5-4-1, etc.)
-- **Tiros a puerta promedio** últimos 5 partidos
-- **Estado del césped** del estadio
-
----
-
-### ⚖️ VEREDICTO FINAL
-**¿Cuál es la mejor línea para invertir HOY?**
-- Opción recomendada: [HÁNDICAP / TOTAL / NINGUNA]
+VEREDICTO:
+- Opción: [HÁNDICAP/TOTAL/NINGUNA]
 - Confianza: X/10
-- Justificación: ¿El valor matemático es real o hay factores ocultos?
+- Justificación
 
-**Si detectas RED FLAGS (información contradictoria, falta de datos), responde: "VETO - INFORMACIÓN INSUFICIENTE"**`;
+RED FLAG → "VETO"`;
 
     navigator.clipboard.writeText(prompt);
-    alert("✅ Prompt Maestro copiado. Pégalo en tu IA para el veredicto final.");
+    alert("✅ Veredicto Maestro copiado");
   };
 
   return (
     <div className="animate-reveal space-y-8 pb-20 text-white">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* PANEL 1: MERCADO Y SMART RADAR */}
         <div className="lg:col-span-4 glass-titanium rounded-[2.5rem] p-8 border-white/5 shadow-2xl">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.2em]">1. Mercado</h3>
-            <button onClick={copyRadarPrompt} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-900/40">
+            <button onClick={copyRadarPrompt} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-[9px] font-black uppercase flex items-center gap-2 transition-all active:scale-95">
               <Zap size={12} fill="currentColor"/> Radar IA
             </button>
           </div>
@@ -252,7 +230,7 @@ Investiga en fuentes REALES y verificables:
                 <optgroup 
                   key={category.category} 
                   label={category.category}
-                  className="bg-neutral-800 font-black text-emerald-500"
+                  className="bg-neutral-800 font-black"
                 >
                   {category.leagues.map((league: any) => (
                     <option 
@@ -267,7 +245,7 @@ Investiga en fuentes REALES y verificables:
               ))}
             </select>
             
-            <div className="flex items-center bg-white/5 border border-white/10 rounded-[1.5rem] px-4 focus-within:ring-2 ring-emerald-500/20">
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-[1.5rem] px-4">
               <Calendar size={18} className="text-gray-500" />
               <input 
                 type="date" 
@@ -310,7 +288,6 @@ Investiga en fuentes REALES y verificables:
           </div>
         </div>
 
-        {/* PANEL 2: INTELIGENCIA */}
         <div className="lg:col-span-4 glass-titanium rounded-[2.5rem] p-8 border-t-emerald-500 border-t-4">
           <h3 className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.2em] text-center mb-8">
             <Target size={16} className="inline mr-2"/> 2. Análisis
@@ -372,7 +349,7 @@ Investiga en fuentes REALES y verificables:
 
             <div className="space-y-3 max-h-[250px] overflow-y-auto">
               {handicaps.map((h, i) => (
-                <div key={`h-${i}`} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-2 animate-reveal">
+                <div key={`h-${i}`} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-2">
                   <select 
                     value={h.team}
                     onChange={e => {const n=[...handicaps]; n[i].team=e.target.value; setHandicaps(n);}} 
@@ -402,7 +379,7 @@ Investiga en fuentes REALES y verificables:
                 </div>
               ))}
               {ouLines.map((l, i) => (
-                <div key={`ou-${i}`} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-2 animate-reveal">
+                <div key={`ou-${i}`} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-2">
                   <select 
                     value={l.type}
                     onChange={e => {const n=[...ouLines]; n[i].type=e.target.value; setOuLines(n);}} 
@@ -436,28 +413,21 @@ Investiga en fuentes REALES y verificables:
             <button 
               onClick={runFullAnalysis} 
               disabled={isAnalyzing} 
-              className="w-full bg-emerald-600 p-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.3em] shadow-xl hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-emerald-600 p-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.3em] shadow-xl hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-50"
             >
-              {isAnalyzing ? (
-                <RefreshCw className="animate-spin mx-auto" size={20}/>
-              ) : (
-                'Procesar Matemática'
-              )}
+              {isAnalyzing ? <RefreshCw className="animate-spin mx-auto" size={20}/> : 'Procesar Matemática'}
             </button>
           </div>
         </div>
 
-        {/* PANEL 3: REPORTE */}
         <div className="lg:col-span-4 space-y-6">
           {resultsH.length > 0 || resultsOU.length > 0 ? (
             <div className="animate-reveal space-y-6">
-              <div className="glass-titanium p-8 rounded-[2.5rem] border-l-4 border-emerald-500 relative overflow-hidden shadow-2xl">
-                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-8 text-center">
-                  Veredicto Matemático
-                </h3>
+              <div className="glass-titanium p-8 rounded-[2.5rem] border-l-4 border-emerald-500 shadow-2xl">
+                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-8 text-center">Veredicto Matemático</h3>
                 <div className="space-y-6">
                   {resultsH.map((r, i) => (
-                    <div key={i} className="flex justify-between items-end border-b border-white/5 pb-4 last:border-0 text-white">
+                    <div key={i} className="flex justify-between items-end border-b border-white/5 pb-4 last:border-0">
                       <div>
                         <div className={`text-[10px] font-black uppercase ${r.edge > 0.3 ? 'text-emerald-500' : 'text-gray-500'}`}>
                           H: {r.team} [{r.line}]
@@ -470,7 +440,7 @@ Investiga en fuentes REALES y verificables:
                     </div>
                   ))}
                   {resultsOU.map((r, i) => (
-                    <div key={i} className="flex justify-between items-end border-b border-white/5 pb-4 last:border-0 text-white">
+                    <div key={i} className="flex justify-between items-end border-b border-white/5 pb-4 last:border-0">
                       <div>
                         <div className={`text-[10px] font-black uppercase ${Math.abs(r.edge) > 0.5 ? 'text-blue-500' : 'text-gray-500'}`}>
                           OU: {r.type} [{r.value}]
@@ -486,7 +456,7 @@ Investiga en fuentes REALES y verificables:
               </div>
               <button 
                 onClick={copyMasterPrompt} 
-                className="w-full glass-titanium border-blue-500/40 p-8 rounded-[2.5rem] flex flex-col items-center gap-4 hover:border-blue-500/80 transition-all group active:scale-95 shadow-2xl"
+                className="w-full glass-titanium border-blue-500/40 p-8 rounded-[2.5rem] flex flex-col items-center gap-4 hover:border-blue-500/80 transition-all active:scale-95 shadow-2xl"
               >
                  <div className="p-4 rounded-2xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
                    <ClipboardCheck size={32} />
