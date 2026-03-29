@@ -1,9 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import math
 import os
 
+# Importar motores
+from api.engines.soccer import calculate_expected_goals
+from api.engines.nba import calculate_expected_margin
+from api.engines.mlb import calculate_expected_runs
+
+# Importar rutas modulares
+from api.routes.soccer_routes import soccer_bp
+from api.routes.nba_routes import nba_bp
+from api.routes.mlb_routes import mlb_bp
+
 app = Flask(__name__)
+
+# Registrar blueprints
+app.register_blueprint(soccer_bp)
+app.register_blueprint(nba_bp)
+app.register_blueprint(mlb_bp)
 
 # CORS Seguro
 CORS(app, resources={
@@ -13,7 +27,7 @@ CORS(app, resources={
             "http://localhost:3000",
             "http://localhost:5173"
         ],
-        "methods": ["POST", "OPTIONS"],
+        "methods": ["POST", "OPTIONS", "GET"],
         "allow_headers": ["Content-Type"]
     }
 })
@@ -303,6 +317,9 @@ def get_leagues():
         }
     }
     return jsonify(leagues)
+
+
+# ==========================================\n# FUNCIONES DEPRECATED - MOVIDAS A engines/\n# ==========================================\n# Las siguientes funciones se mantienen por compatibilidad\n# pero deben eliminarse en futuras versiones.\n# Usar api.engines.soccer, api.engines.nba, api.engines.mlb
 
 if __name__ == '__main__':
     app.run(debug=True)
